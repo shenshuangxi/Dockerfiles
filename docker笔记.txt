@@ -1,0 +1,173 @@
+第一步 安装docker
+
+sudo apt-get remove docker docker-engine docker.io
+
+sudo apt-get update
+
+sudo apt-get install  apt-transport-https  ca-certificates  curl  software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+sudo apt-key fingerprint 0EBFCD88
+
+sudo add-apt-repository  "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable"
+
+sudo apt-get update
+
+sudo apt-get install docker-ce
+
+sudo docker run hello-world
+
+
+#制作初始镜像
+apt-get install debootstrap
+debootstrap --arch amd64 trusty ubuntu-trusty http://mirrors.163.com/ubuntu
+/
+debootstrap --arch amd64 xenial ubuntu-xenial   http://archive.ubuntu.com/ubuntu/
+cd ubuntu-trusty
+#设置镜像时区为东八区
+cp usr/share/zoneinfo/Asia/Shanghai etc/localtime 	
+#制作镜像
+tar -c .|docker import - ubuntu1404-baseimage:1.0
+
+
+#安装私人仓库
+docker run -p 5000:5000 registry
+
+#安装nginx
+apt-get install -y nginx
+
+#创建配置文件
+touch /etc/nginx/conf.d/registry.conf
+
+# For version of nginx> 1.3.9 that include chunked transfer encoding support 
+# Replace witch approprivate values where necessary
+
+upstreamdocker-registry {
+	server localhost:5000; #这里修改为docker-registry地址
+}
+
+# uncomment if you want a 301 redirect for users attempting to comment on port 80
+# NOTE: docker client will still fail. this is just for convenience
+
+#server {
+#	listen *:80;
+#	server_name my.docker.registry.com
+#	return 301 https://$server_name$request_uri;
+#}
+
+server {
+ listen 443;
+ server_name dev.regsitry.com;
+ ssl on;# 打开SSL
+ ssl_certificate /etc/ssl/certs/docker-registry.crt;#公钥证书
+ ssl_certificate_key /etc/ssl/private/docker_registry.key;#私钥
+ client_max_body_size 0;
+ chunked_transfer_encoding on;
+ 
+ location / {
+   auth_basic "Restricted";
+   auth_basic_user_filedocker-registry.htpasswd;
+   includedocker-registry.conf;
+ }
+ 
+ location /-ping {
+   auth_basic off;
+   includedocker-registry.conf;
+ }
+ 
+ location /v1/_ping {
+   auth_basic off;
+   includedocker-registry.conf;
+ }
+ 
+}
+
+
+
+
+docker 核心组件
+	Docker 客户端和服务器
+	Docker 镜像
+	Registry
+	Docker容器
+	
+	
+docker run 
+
+-i -t 已交互模式运行 容器
+
+docker top 容器ID   查看容器内部进程
+docker logs 容器ID 查看容器内部日志  -f 实时打印  --tail n 获取最近的日志条数  -t 日志添加日期
+docker exec  容器ID 容器内部运行命令
+docker inspect 容器ID 查看容器信息
+
+
+ls /var/lib/docker/ 查看docker目录
+
+Dockerfile指令
+
+CMD
+	用于
+    
+
+
+
+
+
+
+
+
+
+
+docker 命令
+--api-cors-header=""			设定远程访问API所需cors-header
+-b,--bridge=""					将容器网络访问方式设置为网络桥模式
+--bip=""						设定网络桥IP
+-D，--debug=false				启动Debug模式
+-d,--daemon=false				启动守护进程模式
+--default-gateway=""			所有容器默认使用IPV4
+--default-gateway-v6=""			所有容器默认使用IPV6
+--dns=[]						使用指定的DNS服务器
+--dns-search=[]					使用指定的DNS检索服务器
+--default-ulimit=[]				设定容器默认的ulimit参数
+-e,--exec-driver="native"		设定docker使用的exec-driver
+--exec-opt=[]					设定exec-driver参数
+--exec-root="/var/run/Docker"	设定exec-driver默认根目录地址
+--fixed-cidr=""					设定ipv4子网段
+--fixed-cidr-v6=""				设定ipv6子网段
+-G,--group="Docker"				设定Unix Socket 文件用户所属组
+-g,--graph="/var/lib/Docker"	设定Docker runtime 时的根目录地址
+-H,--host=[]					设定Unix Socket	文件监听位置
+-h,--help=false					输出帮助信息
+--icc=true						允许容器之间相互通信
+--insecure-registry=[]			设定可信任仓库地址
+--ip=0.0.0.0					设定绑定容器端口信息时的默认IP
+--ip-forward=true				允许转发IPV4数据包
+--ip-masq=true					允许IP伪装
+........
+
+Daemon讲解
+1，网络配置
+2，存储驱动配置
+3，执行驱动配置
+4，DNS配置
+5，其他配置
+
+网络配置
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
