@@ -32,7 +32,19 @@ COPY jenkins.war /home/apache-tomcat-8.0.48/webapps/
 
 RUN mv /home/apache-tomcat-8.0.48/webapps/jenkins.war /home/apache-tomcat-8.0.48/webapps/ROOT.war
 
+COPY apache-maven-3.5.2-bin.tar.gz /home/
 
+RUN tar -zxvf apache-maven-3.5.2-bin.tar.gz 
+
+RUN rm -f apache-maven-3.5.2-bin.tar.gz
+
+COPY  settings.xml  /home/apache-maven-3.5.2/conf/
+
+ENV M2_HOME /home/apache-maven-3.5.2
+
+ENV PATH $PATH:$M2_HOME/bin
+
+RUN apt-get install git
 
 EXPOSE 8080
 
