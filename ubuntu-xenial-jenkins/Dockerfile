@@ -44,7 +44,7 @@ ENV M2_HOME /home/apache-maven-3.5.2
 
 ENV PATH $PATH:$M2_HOME/bin
 
-RUN apt-get install git
+RUN apt-get install -y git
 
 EXPOSE 8080
 
