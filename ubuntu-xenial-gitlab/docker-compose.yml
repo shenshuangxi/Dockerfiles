@@ -1,8 +1,12 @@
 redis:
   image: redis
+  ports:
+    - "6379:6379"
 
 postgresql:
   image: postgres
+  ports: 
+    - "5432:5432"
   environment:
     - DB_USER=gitlab
     - DB_PASS=password
@@ -17,7 +21,8 @@ gitlab:
     - "10080:80"
     - "10022:22"
   environment: 
+    - GITLAB_HOST="192.168.137.4"
     - GITLAB_PORT=10080
     - GITLAB_SSH_PORT=10022
     - GITLAB_SECRETS_DB_KEY_BASE=long-and-random-alphanumeric-string
-
+    
