@@ -18,6 +18,8 @@ sudo apt-get install docker-ce
 
 sudo docker run hello-world
 
+docker run --name first-mysql -p 3306:3306 -e MYSQL\_ROOT\_PASSWORD=root -d mysql
+
 
 #制作初始镜像
 apt-get install debootstrap
@@ -114,8 +116,23 @@ CMD
 
 
 
+gitlab 配置
 
+nginx['listen_port'] = 80
+external_url "http://192.168.137.4:10080"
+/
+external_url "https://192.168.137.4:10081"
 
+gitlab_rails['gitlab_ssh_host'] = '192.168.137.4'
+gitlab_rails['gitlab_shell_ssh_port'] = 10022
+
+docker run --name='gitlab'  -d \
+  -h '192.168.137.4' \
+  -p 10022:10022 -p 10080:80 -p 10443:443 \
+  -v /home/shenshuangxi/share/git/ubuntu-xenial-gitlab/config:/etc/gitlab \
+  -v /home/shenshuangxi/share/git/ubuntu-xenial-gitlab/logs:/var/log/gitlab \
+  -v /home/shenshuangxi/share/git/ubuntu-xenial-gitlab/data:/var/opt/gitlab \
+  gitlab/gitlab-ce
 
 
 
