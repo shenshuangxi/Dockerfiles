@@ -17,13 +17,13 @@ if [ -d "$PWD/$1" ]; then
 
 	echo $PWD
 
-	echo 'FROM shenshuangxi/ubuntu-xenial-tomcat8' >> Dockerfile
-	echo 'MAINTAINER shenshuangxi <1695904589@qq.com>' >> Dockerfile
+	echo "FROM shenshuangxi/ubuntu-xenial-tomcat8" >> Dockerfile
+	echo "MAINTAINER shenshuangxi <1695904589@qq.com>" >> Dockerfile
 	echo "ENV REFRESHED_AT 2017-12-22" >> Dockerfile
-	echo 'VOLUME ["/data/$1"]' >> Dockerfile
-	echo 'RUN rm -f -d -r /home/apache-tomcat-8.0.48/webapps/*' >> Dockerfile
-	echo 'COPY $1.war /home/apache-tomcat-8.0.48/webapps/' >> Dockerfile 
-	echo 'RUN mv /home/apache-tomcat-8.0.48/webapps/$1.war /home/apache-tomcat-8.0.48/webapps/ROOT.war' >> Dockerfile
+	echo "VOLUME [\"/data/$1\"]" >> Dockerfile
+	echo "RUN rm -f -d -r /home/apache-tomcat-8.0.48/webapps/*" >> Dockerfile
+	echo "COPY $1.war /home/apache-tomcat-8.0.48/webapps/" >> Dockerfile 
+	echo "RUN mv /home/apache-tomcat-8.0.48/webapps/$1.war /home/apache-tomcat-8.0.48/webapps/ROOT.war" >> Dockerfile
 	
 
 	docker build -t shenshuangxi/$1 .
