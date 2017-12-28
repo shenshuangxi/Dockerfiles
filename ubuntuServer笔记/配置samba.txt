@@ -1,0 +1,14 @@
+#apt-get install samba samba-common system-config-samba python-glade2 gksu
+
+#vim /etc/samba/smb.conf
+
+#修改
+
+security = share
+
+[share]
+   path=/home/shenshuangxi/share
+   available = yes
+   browseable = yes
+   public = yes
+   writable = yes

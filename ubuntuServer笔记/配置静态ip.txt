@@ -1,0 +1,15 @@
+#vim /etc/network/interface
+auto ens33
+iface ens33 inet static
+#ip地址
+address 192.168.137.4 
+#网关
+gateway 192.168.137.2
+#掩码
+netmask 255.255.255.0
+#虚拟网络的地址
+network 192.168.137.1
+#广播地址
+broadcast 192.168.137.255
+#dns 地址
+dns-nameservers 192.168.137.1 8.8.8.8
