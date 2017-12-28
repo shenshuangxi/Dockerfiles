@@ -14,6 +14,7 @@ if [ -d "$PWD/$1" ]; then
         cp $1.tar.gz docker/
         mv $1.tar.gz  $1-`date +%Y%m%d%H%M%S`.tar.gz
         cd docker
+		
 
         echo $PWD
 
