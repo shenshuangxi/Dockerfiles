@@ -14,7 +14,6 @@ if [ -d "$PWD/$1" ]; then
         cp $1.tar.gz docker/
         mv $1.tar.gz  $1-`date +%Y%m%d%H%M%S`.tar.gz
         cd docker
-		
 
         echo $PWD
 
@@ -35,13 +34,22 @@ if [ -d "$PWD/$1" ]; then
 		echo "RUN echo \"\tinclude       mime.types;\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\tdefault_type  application/octet-stream;\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\tsendfile        on;\" >> nginx.conf " >> Dockerfile
+		echo "RUN echo \"\tunderscores_in_headers on;#自定义 Head 必须定义 \" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\tserver {\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\t\tlisten       80;\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\t\tserver_name  localhost;\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\t\tlocation / { root   $1; index  index.html index.htm; }\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\t\terror_page   500 502 503 504  /index.html;\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"\t\tlocation = /index.html { root   $1; }\" >> nginx.conf " >> Dockerfile
-		echo "RUN echo \"\t\tlocation /api/{proxy_pass http://192.168.137.4:10097;}\" >> nginx.conf " >> Dockerfile
+		
+		echo "RUN echo \"\t\tlocation /api/{\" >> nginx.conf " >> Dockerfile
+		echo "RUN echo \"\t\t\tproxy_pass http://192.168.137.4:10097;\" >> nginx.conf " >> Dockerfile
+		echo "RUN echo \"\t\t\tproxy_set_header HOST \\\$host;\" >> nginx.conf " >> Dockerfile
+		echo "RUN echo \"\t\t\tproxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;\" >> nginx.conf " >> Dockerfile
+		echo "RUN echo \"\t\t\tproxy_set_header X-Real-IP \\\$remote_addr;\" >> nginx.conf " >> Dockerfile
+		echo "RUN echo \"\t\t\tproxy_set_header Request-Url \\\$request_uri;\" >> nginx.conf " >> Dockerfile
+		echo "RUN echo \"\t\t}\" >> nginx.conf " >> Dockerfile
+		
 		echo "RUN echo \"\t}\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"}\" >> nginx.conf " >> Dockerfile
 		echo "RUN echo \"daemon off;\" >> nginx.conf " >> Dockerfile
