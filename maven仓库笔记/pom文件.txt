@@ -1,0 +1,44 @@
+<!-- 私服仓库 -->
+  <repositories>
+    <repository>
+        <id>nexus</id>
+        <name>nexus</name>
+        <url>http://192.168.137.4:10096/content/groups/public/</url>
+        <releases>
+            <enabled>true</enabled>
+        </releases>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+  </repositories>
+  
+  <!-- 私服插件仓库 -->
+  <pluginRepositories>
+    <pluginRepository>
+        <id>nexus</id>
+        <name>nexus</name>
+        <url>http://192.168.137.4:10096/content/groups/public/</url>
+        <releases>
+            <enabled>true</enabled>
+        </releases>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+  
+  <!-- 项目发布到私服，maven项目使用命令：mvn clean deploy -->
+  <distributionManagement>
+      <repository>
+          <id>user-release</id>
+          <name>User Project Release</name>
+          <url>http://192.168.137.4:10096/content/repositories/releases/</url>
+      </repository>
+
+      <snapshotRepository>
+          <id>user-snapshots</id>
+          <name>User Project SNAPSHOTS</name>
+          <url>http://192.168.137.4:10096/content/repositories/snapshots/</url>
+      </snapshotRepository>
+  </distributionManagement>

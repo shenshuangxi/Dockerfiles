@@ -1,0 +1,4 @@
+ubuntu 访问window文件
+虚拟机 vmhgfs-fuse  .host:/ /mnt/hgfs
+
+mount -t cifs -o iocharset=utf8,codepage=cp936 //192.168.1.102/share /home/share
