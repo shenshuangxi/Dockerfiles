@@ -1,0 +1,71 @@
+curl	-X<VERB>	'<PROTOCOL>://<HOST>/<PATH>?<QUERY_STRING>'	-d	'<BODY>'
+
+VERB			HTTP方法：	GET	,		POST	,		PUT	,		HEAD	,		DELETE	
+PROTOCOL		http或者https协议（只有在Elasticsearch前面有https代理的时候可用）
+HOST			Elasticsearch集群中的任何一个节点的主机名，如果是在本地的节点，那么就叫localhost
+PORT			Elasticsearch	HTTP服务所在的端口，默认为9200
+QUERY_STRING	一些可选的查询请求参数，例如	?pretty	参数将使请求返回更加美观易读的JSON数据
+BODY			一个JSON格式的请求主体（如果请求需要的话）
+
+创建员工目录
+curl -XPUT 'http://192.168.137.4:10100/megacorp/employee/1?pretty' -H "Content-Type: application/json" -d '{"first_name":"John","last_name":"Smith","age":25,"about":"I love to go rock climbing","interests":["sports","music"]}'
+curl -XPUT 'http://192.168.137.4:10100/megacorp/employee/2?pretty' -H "Content-Type: application/json" -d '{"first_name":"Jane","last_name":"Smith","age":32,"about"	:"I	like to collect rock albums","interests":["music"]}'
+curl -XPUT 'http://192.168.137.4:10100/megacorp/employee/3?pretty' -H "Content-Type: application/json" -d '{"first_name":"Douglas","last_name":"Fir","age":35,"about":"I like to build cabinets","interests":["forestry"]}'
+
+检索
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/1?pretty' 
+
+简单搜索
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' 
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty&q=last_name:Smith'
+
+DSL查询
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"match":{"last_name":"Smith"}}}'
+ 
+复杂的搜索
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"bool":{"filter":{"range":{"age":{"gt":30}}},"must":{"match":{"last_name":"smith"}}}}}'
+ 
+ 
+全文检索 相关性越近排名越高
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"match":{"about":"climbing"}}}}'
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"match":{"about":"rock"}}}}'
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"match":{"about":"rock climbing"}}}}'
+
+
+短语搜索
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"match_phrase":{"about":"rock climbing"}}}}'
+ 
+高亮搜索
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"match_phrase":{"about":"rock climbing"}}},"highlight":{"fields":{"about":{}}}}'
+
+分析
+curl -XPUT 'http://192.168.137.4:10100/megacorp/_mapping/employee?pretty' -H "Content-Type: application/json" -d  '{"properties":{"interests":{"type":"text","fielddata": true}}}'
+curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"aggs":{"all_interests":{"terms":{"field":"interests"}}}}'
+
+查看集群健康  	green,yellow或red	
+curl -XGET 'http://192.168.137.4:10100/_cluster/health?pretty' 
+
+索引index
+	索引只是用于指向一个或多个分片的逻辑命名空间
+	
+分片shard
+	最小的工作单元，保存索引中数据的一部分 分为主分片(primary shard)和复制分片(replica shard)
+
+	主分片: 该分片数量决定索引能存储的数据量
+	
+	复制分片: 主分片的副本，用于数据冗余。也可以提供读请求操作
+	
+	主分片索引创建时固定 复制分片可以随时调整
+	
+	curl -XPUT 'http://192.168.137.4:10100/blogs?pretty'  -H "Content-Type: application/json" -d '{"settings":{"number_of_shards":3,"number_of_replicas":1}}'
+	
+	
+	
+	
+	
+
+
+ 
+ 
+ 
+ 
