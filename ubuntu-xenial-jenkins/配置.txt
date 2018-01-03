@@ -1,0 +1,55 @@
+第一步 下载jenkins.war 包 安装maven  jdk  可以通过配置安装
+
+第二部 部署到tomcat 运行
+
+第三步 按照提示获取密码输入 安装所有插件
+
+第四步 安装插件 Publish Over SSH, NodeJS,   SSH,
+
+第五步 配置系统
+		配置gitlab  
+		配置publish over sssh
+		
+第六步 工具配置
+		
+		jdk  maven  nodejs
+		
+第七步 作业配置
+
+		general: 项目名称  项目描述  github(填写全局配置中的设置) 对应仓库名称
+		源码管理: 配置源码仓库路径  凭证
+		构建触发器: 勾选 Build whenever a SNAPSHOT dependency is built
+					勾选 Build when a change is pushed to GitLab. GitLab CI Service URL: http://192.168.137.4:10095/project/fis
+	maven:
+	
+		Build:		配置一些构建参数  maven 构建可以使用 clean package -DskipTests
+		
+		构建后配置:	SSH Publisher
+									name 随便起
+									Transfer Set
+													source file  需要的文件 比如 target/*.war
+													Remove prefix 不需要的文件
+													Remote directory 在你的系统配置中已有的目录下的 你的需要的文件需要存放的目录地址 必须要填 不然不会送
+													Exec command		执行脚本 文件发送后ssh执行
+																		例子 	cd /home/shenshuangxi/share/project   
+																				sh   jenkins.sh   $JOB_NAME   10097
+																				
+	node:
+		构建(在系统配置中安装yarn  npm -g install yarn):		
+				yarn install 
+				yarn build
+				mv dist $JOB_NAME
+				tar zcvf $JOB_NAME.tar.gz $JOB_NAME
+				rm -rdf $JOB_NAME
+				
+		构建后配置:
+					name 随便起
+									Transfer Set
+													source file  需要的文件 比如 $JOB_NAME.tar.gz
+													Remove prefix 不需要的文件
+													Remote directory  /$JOB_NAME 在你的系统配置中已有的目录下的 你的需要的文件需要存放的目录地址 必须要填 不然不会送
+													Exec command		执行脚本 文件发送后ssh执行
+																		例子 	cd /home/shenshuangxi/share/project
+																				sh jenkins-node.sh  $JOB_NAME  10099
+					
+		
