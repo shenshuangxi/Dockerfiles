@@ -1,0 +1,7 @@
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/log/logstash-tutorial.log
+
+output.logstash:
+  hosts: ["192.168.0.104:10103"]
