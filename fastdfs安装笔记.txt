@@ -1,0 +1,466 @@
+fastdfs安装指南
+1，安装系统文件
+	apt-get install zlib1g-dev
+	apt-get install zlib1g
+	apt-get install g++ gcc make automake autoconf libtool
+	apt-get install openssl libssl-dev
+	apt-get install libpcre3 libpcre3-dev
+	apt-get install libtool
+	apt-get install build-essential
+
+1，安装LibFastCommon模块
+	git clone https://github.com/happyfish100/libfastcommon.git
+
+	2, 编译
+	cd libfastcommon
+	./make.sh && ./make.sh install
+
+	3, libcommon 创建软链接到/usr/local/lib目录下
+	ln -s /usr/lib64//libfastcommon.so /usr/local/lib/libfastcommon.so
+	ln -s /usr/lib64//libfastcommon.so /usr/lib/libfastcommon.so
+	ln -s /usr/lib64//libfdfsclient.so /usr/local/lib/libfdfsclient.so
+	ln -s /usr/lib64//libfdfsclient.so /usr/lib/libfdfsclient.so
+
+4, 安装fastdfs
+	git clone https://github.com/happyfish100/fastdfs.git
+	
+	2， 编译
+		cd fastdfs
+		./make.sh && ./make.sh install
+	3, 修改配置文件
+		cp /etc/fdfs/client.conf.sample /etc/fdfs/client.conf
+		cp /etc/fdfs/storage.conf.sample /etc/fdfs/storage.conf
+		cp /etc/fdfs/tracker.conf.sample /etc/fdfs/tracker.conf
+		
+		1，创建tracker工作目录
+			mkdir /opt/fastdfs_tracker
+		
+		2，配置tracker.conf
+			disabled=false 
+			bind_addr= 0.0.0.0
+			port=22122 #默认端口号 
+			base_path=/opt/fastdfs_tracker #我刚刚创建的目录 
+			http.server_port=8080 #默认端口是8080
+			store_lookup=0  #采用轮询策略进行存储，0 轮询 1：始终定向到某个group 2：负载进行存储文件
+			
+		3，创建storage工作目录
+			mkdir /opt/fastdfs_storage
+			mkdir /opt/fastdfs_storage_data
+			
+		4，启动track
+			service fdfs_trackerd start
+		
+		5，修改配置文件storage.conf
+			disabled=false #启用配置文件  
+			group_name=group1 #组名（第一组为 group1， 第二组为 group2）  
+			port=23000 #storage 的端口号,同一个组的 storage 端口号必须相同  
+			base_path=/opt/fastdfs_storage #设置storage数据文件和日志目录 
+			store_path0=/opt/fastdfs_storage_data #实际文件存储路径  
+			store_path_count=1 #存储路径个数，需要和 store_path 个数匹配  
+			tracker_server=192.168.43.70:22122 #tracker 服务器的 IP 地址和端口  
+			tracker_server=192.168.43.70:22122 #多个 tracker 直接添加多条配置  
+			http.server_port=8888 #设置 http 端口号  
+			
+		6，启动storage
+			service fdfs_storaged start
+			
+		7，storage日志查看
+			fdfs_monitor /etc/fdfs/storage.conf
+			
+		8，安装fastdfs-nginx-module，nginx-catch, Nginx模块
+			wget http://nginx.org/download/nginx-1.15.12.tar.gz
+			wget http://labs.frickle.com/files/ngx_cache_purge-2.3.tar.gz
+			git clone https://github.com/happyfish100/fastdfs-nginx-module.git
+			
+		9，编译安装
+			tar -zxvf nginx-1.15.12.tar.gz
+			cd nginx-1.15.12
+			./configure --prefix=/usr/local/nginx --add-module=/path/fastdfs-nginx-module/src #解压后fastdfs-nginx-module所在的位置
+			make && make install
+		10，查看
+			ll /usr/local/nginx/
+			
+		11， 配置fastdfs nginx
+			cp fastdfs-nginx-module/src/mod_fastdfs.conf /etc/fdfs/
+			vim /etc/fdfs/mod_fastdfs.conf 
+			
+				connect_timeout=10  
+				base_path=/opt/fastdfs_storage
+				tracker_server=192.168.1.131:22122  
+				tracker_server=192.168.1.132:22122  
+				storage_server_port=23000  
+				group_name=group1  #分组配置
+				url_have_group_name = true  
+				store_path0=/opt/fastdfs_storage_data
+				group_count = 2  
+				[group1]  
+				group_name=group1  
+				storage_server_port=23000  
+				store_path_count=1  
+				store_path0=/opt/fastdfs_storage_data
+				[group2]  
+				group_name=group2  
+				storage_server_port=23000  
+				store_path_count=1  
+				store_path0=/opt/fastdfs_storage_data 
+				
+		12，拷贝fastdfs配置文件
+				cd fastdfs
+				cp http.conf  mime.types  /etc/fdfs/
+				
+		13, 配置nginx 并启动
+			# vi /usr/local/nginx/conf/nginx.conf  
+			user root;  
+			worker_processes 1;  
+			events {  
+				worker_connections 1024;  
+			}  
+			http {  
+				include mime.types;  
+				default_type application/octet-stream;  
+				sendfile on;  
+				keepalive_timeout 65;  
+				server {  
+					listen 8888;  
+					server_name localhost;  
+					location ~/group([0-9])/M00 {  
+						#alias /fastdfs/storage/data;  
+						ngx_fastdfs_module;  
+					}  
+					error_page 500 502 503 504 /50x.html;  
+					location = /50x.html {  
+						root html;  
+					}  
+				}  
+			}  
+			
+			/usr/local/nginx/sbin/nginx #启动 /usr/local/nginx/sbin/nginx -s reload 重新加载
+
+			
+		14，文件上传测试
+			# vi /etc/fdfs/client.conf  
+			base_path=/fastdfs/tracker  
+			tracker_server=192.168.137.4:22122  
+			
+			上传
+				fdfs_upload_file /etc/fdfs/client.conf P71022-205803.jpg 
+				
+5，Tracker安装Nginx、 ngx_cache_purge 模块
+	1，编译安装
+		tar -zxvf nginx-1.15.12.tar.gz
+		cd nginx-1.15.12
+		./configure --prefix=/usr/local/nginx --add-module=/path/ngx_cache_purge-2.3 #解压后ngx_cache_purge所在的位置
+		make && make install
+		
+	2，配置 Nginx， 设置负载均衡以及缓存
+		# vi /usr/local/nginx/conf/nginx.conf  
+
+		#user  nobody;
+		worker_processes  1;
+
+		#error_log  logs/error.log;
+		#error_log  logs/error.log  notice;
+		#error_log  logs/error.log  info;
+
+		#pid        logs/nginx.pid;
+
+
+		events {
+			worker_connections  1024;
+		}
+
+
+		http {
+			include       mime.types;
+			default_type  application/octet-stream;
+
+			#log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+			#                  '$status $body_bytes_sent "$http_referer" '
+			#                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+			#access_log  logs/access.log  main;
+			sendfile        on;  
+			tcp_nopush      on;  
+			#tcp_nopush     on;
+			#keepalive_timeout  0;
+			keepalive_timeout  65;
+
+			#gzip  on;
+			#设置缓存  
+			server_names_hash_bucket_size 128;  
+			client_header_buffer_size 32k;  
+			large_client_header_buffers 4 32k;  
+			client_max_body_size 300m;  
+		  
+			proxy_redirect off;  
+			proxy_set_header Host $http_host;  
+			proxy_set_header X-Real-IP $remote_addr;  
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  
+			proxy_connect_timeout 90;  
+			proxy_send_timeout 90;  
+			proxy_read_timeout 90;  
+			proxy_buffer_size 16k;  
+			proxy_buffers 4 64k;  
+			proxy_busy_buffers_size 128k;  
+			proxy_temp_file_write_size 128k;
+			#设置缓存存储路径，存储方式，分别内存大小，磁盘最大空间，缓存期限  
+			proxy_cache_path /opt/fastdfs_tracker/proxy_cache levels=1:2 
+			keys_zone=http-cache:200m max_size=1g inactive=30d;
+			proxy_temp_path /opt/fastdfs_tracker/tmp;
+			#group1的服务设置  
+			upstream fdfs_group1 {  
+				 server 192.168.43.72:8888 weight=1 max_fails=2 fail_timeout=30s;  
+				 server 192.168.43.73:8888 weight=1 max_fails=2 fail_timeout=30s;  
+			}
+			#group2的服务设置  
+			upstream fdfs_group2 {  
+				 server 192.168.43.74:8888 weight=1 max_fails=2 fail_timeout=30s;  
+				 server 192.168.43.75:8888 weight=1 max_fails=2 fail_timeout=30s;  
+			}
+			
+			server {
+				listen       8000;
+				server_name  localhost;
+
+				#charset koi8-r;
+
+				#access_log  logs/host.access.log  main;
+				#group1的负载均衡配置  
+				location /group1/M00 {  
+					proxy_next_upstream http_502 http_504 error timeout invalid_header;  
+					proxy_cache http-cache;  
+					proxy_cache_valid 200 304 12h;  
+					proxy_cache_key $uri$is_args$args;  
+					#对应group1的服务设置  
+					proxy_pass http://fdfs_group1;  
+					expires 30d;  
+				}
+				location /group2/M00 {  
+					proxy_next_upstream http_502 http_504 error timeout invalid_header;  
+					proxy_cache http-cache;  
+					proxy_cache_valid 200 304 12h;  
+					proxy_cache_key $uri$is_args$args;  
+					#对应group2的服务设置  
+					proxy_pass http://fdfs_group2;  
+					expires 30d;  
+				 }
+				location ~/purge(/.*) {  
+					allow 127.0.0.1;  
+					allow 192.168.43.0/24;  
+					deny all;  
+					proxy_cache_purge http-cache $1$is_args$args;  
+				}        
+				location / {
+					root   html;
+					index  index.html index.htm;
+				}
+
+				#error_page  404              /404.html;
+
+				# redirect server error pages to the static page /50x.html
+				#
+				error_page   500 502 503 504  /50x.html;
+				location = /50x.html {
+					root   html;
+				}
+
+				# proxy the PHP scripts to Apache listening on 127.0.0.1:80
+				#
+				#location ~ \.php$ {
+				#    proxy_pass   http://127.0.0.1;
+				#}
+
+				# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+				#
+				#location ~ \.php$ {
+				#    root           html;
+				#    fastcgi_pass   127.0.0.1:9000;
+				#    fastcgi_index  index.php;
+				#    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+				#    include        fastcgi_params;
+				#}
+
+				# deny access to .htaccess files, if Apache's document root
+				# concurs with nginx's one
+				#
+				#location ~ /\.ht {
+				#    deny  all;
+				#}
+			}
+
+
+			# another virtual host using mix of IP-, name-, and port-based configuration
+			#
+			#server {
+			#    listen       8000;
+			#    listen       somename:8080;
+			#    server_name  somename  alias  another.alias;
+
+			#    location / {
+			#        root   html;
+			#        index  index.html index.htm;
+			#    }
+			#}
+
+
+			# HTTPS server
+			#
+			#server {
+			#    listen       443 ssl;
+			#    server_name  localhost;
+
+			#    ssl_certificate      cert.pem;
+			#    ssl_certificate_key  cert.key;
+
+			#    ssl_session_cache    shared:SSL:1m;
+			#    ssl_session_timeout  5m;
+
+			#    ssl_ciphers  HIGH:!aNULL:!MD5;
+			#    ssl_prefer_server_ciphers  on;
+
+			#    location / {
+			#        root   html;
+			#        index  index.html index.htm;
+			#    }
+			#}
+
+		}
+构建Keepalive+Nginx 实现虚拟IP的代理
+#user  nobody;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    #gzip  on;
+    upstream fastdfs_tracker {  
+       server 192.168.43.70:8000 weight=1 max_fails=2 fail_timeout=30s;  
+       server 192.168.43.71:8000 weight=1 max_fails=2 fail_timeout=30s;  
+    }  
+    upstream tomcat{
+     server 192.168.43.103:8080 weight=1;
+     server 192.168.43.104:8080 weight=1;
+    }
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            proxy_pass http://tomcat;
+            proxy_set_header X-NGINX "NGINX-1";
+            root   html;
+            index  index.html index.htm;
+        }
+
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+        location /fastdfs {  
+           root html;  
+           index index.html index.htm;  
+           proxy_pass http://fastdfs_tracker/;  
+           proxy_set_header Host $http_host;  
+           proxy_set_header Cookie $http_cookie;  
+           proxy_set_header X-Real-IP $remote_addr;  
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  
+           proxy_set_header X-Forwarded-Proto $scheme;  
+           client_max_body_size 300m;  
+        }  
+
+        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+        #
+        #location ~ \.php$ {
+        #    proxy_pass   http://127.0.0.1;
+        #}
+
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        #location ~ \.php$ {
+        #    root           html;
+        #    fastcgi_pass   127.0.0.1:9000;
+        #    fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        #    include        fastcgi_params;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #    deny  all;
+        #}
+    }
+
+
+    # another virtual host using mix of IP-, name-, and port-based configuration
+    #
+    #server {
+    #    listen       8000;
+    #    listen       somename:8080;
+    #    server_name  somename  alias  another.alias;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+
+
+    # HTTPS server
+    #
+    #server {
+    #    listen       443 ssl;
+    #    server_name  localhost;
+
+    #    ssl_certificate      cert.pem;
+    #    ssl_certificate_key  cert.key;
+
+    #    ssl_session_cache    shared:SSL:1m;
+    #    ssl_session_timeout  5m;
+
+    #    ssl_ciphers  HIGH:!aNULL:!MD5;
+    #    ssl_prefer_server_ciphers  on;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+
+}
+
