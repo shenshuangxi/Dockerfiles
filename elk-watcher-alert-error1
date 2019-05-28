@@ -36,11 +36,10 @@
     }
   },
   "condition": {
-    "script": {
-      "source": "return params.result",
-      "lang": "painless",
-      "params": {
-        "result": true
+    "compare": {
+      "ctx.payload.hits.total": {
+		    # 报警数量阀值
+        "gte": 1
       }
     }
   },
