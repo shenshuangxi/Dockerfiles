@@ -19,6 +19,10 @@ curl -XGET 'http://192.168.137.4:10100/megacorp/employee/1?pretty'
 curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' 
 curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty&q=last_name:Smith'
 
+添加密码检索
+
+curl --user elastic:changme  -XGET 'http://172.16.3.11:9200/demo-*/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"bool":{"filter":{"range":{"@timestamp":{"gte":"now-30m", "lte":"now"}}},"must":{"match":{"level": "ERROR"}}}}}'
+
 DSL查询
 curl -XGET 'http://192.168.137.4:10100/megacorp/employee/_search?pretty' -H "Content-Type: application/json" -d  '{"query":{"match":{"last_name":"Smith"}}}'
  
