@@ -1,0 +1,67 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "30s"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": [
+          "demo-*"
+        ],
+        "rest_total_hits_as_int": true,
+        "body": {
+          "size": 0,
+          "query": {
+            "bool": {
+              "filter": {
+                "range": {
+                  "@timestamp": {
+                    "gte": "now-1m",
+                    "lte": "now"
+                  }
+                }
+              },
+              "must": {
+                "match": {
+                  "level": "ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "compare": {
+      "ctx.payload.hits.total": {
+        "gte": 1
+      }
+    }
+  },
+  "actions": {
+    "email_administrator": {
+      "email": {
+        "profile": "standard",
+        "attachments": {
+          "attached_data": {
+            "data": {
+              "format": "json"
+            }
+          }
+        },
+        "priority": "high",
+        "to": [
+          "shenshuangxi8145@dingtalk.com"
+        ],
+        "subject": "Encountered {{ctx.payload.hits.total.value}} errors",
+        "body": {
+          "text": "There are {{ctx}}  {{ctx.payload.hits.total}} documents in your index. Threshold is 1."
+        }
+      }
+    }
+  }
+}
