@@ -13,7 +13,7 @@
         ],
         "rest_total_hits_as_int": true,
         "body": {
-          "size": 0,
+          "size": 10,
           "query": {
             "bool": {
               "filter": {
@@ -36,9 +36,11 @@
     }
   },
   "condition": {
-    "compare": {
-      "ctx.payload.hits.total": {
-        "gte": 1
+    "script": {
+      "source": "return params.result",
+      "lang": "painless",
+      "params": {
+        "result": true
       }
     }
   },
@@ -59,7 +61,7 @@
         ],
         "subject": "Encountered {{ctx.payload.hits.total.value}} errors",
         "body": {
-          "text": "There are {{ctx}}  {{ctx.payload.hits.total}} documents in your index. Threshold is 1."
+          "text": " 报错日志条数: {{ctx.payload.hits.total}}\n 日志路径{{ ctx.payload.hits.hits.0._source.source }}\n 实例ID：{{ ctx.payload.hits.hits.0._source.meta.cloud.instance_id }}\n 报错日志：\n{{#ctx.payload.hits.hits}}{{_source.message}}\n{{/ctx.payload.hits.hits}} "
         }
       }
     }
